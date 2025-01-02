@@ -13,7 +13,7 @@ class AddRecipeForm extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Recipe'),
+        title: Text('Add New Recipe'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

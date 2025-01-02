@@ -1,13 +1,9 @@
-// recipe_detail.dart
-// ignore_for_file: use_key_in_widget_constructors
-
 import 'package:flutter/material.dart';
-import 'package:recipe_app/widget/add_recipe_form.dart';
 import 'recipe_detail.dart';
+import 'package:recipe_app/widget/add_recipe_form.dart';
 
 class RecipeListPage extends StatefulWidget {
   @override
-  // ignore: library_private_types_in_public_api
   _RecipeListPageState createState() => _RecipeListPageState();
 }
 
@@ -24,8 +20,9 @@ class _RecipeListPageState extends State<RecipeListPage> {
           'https://www.foodandwine.com/thmb/f4uf4WXHz-waXLB_oqG-U1p4Y7A=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/spicy-chicken-curry-FT-RECIPE0321-58f84fdf7b484e7f86894203eb7834e7.jpg',
       'title': 'Chicken Curry',
       'description': 'A flavorful and spicy chicken dish.',
-    }
+    },
   ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,27 +34,89 @@ class _RecipeListPageState extends State<RecipeListPage> {
         itemBuilder: (context, index) {
           final recipe = recipes[index];
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RecipeDetailPage(recipe: recipe),
-                ),
-              );
+          return Dismissible(
+            key: Key(recipe['title']!),
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (direction) async {
+              // Show the delete confirmation dialog
+              return _showDeleteConfirmation(context, recipe, index);
             },
-            child: Card(
-                margin: EdgeInsets.all(10),
-                child: ListTile(
-                  leading: Image.network(
-                    recipe['image']!,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: EdgeInsets.only(right: 25),
+              color: Colors.red,
+              child: Icon(
+                Icons.delete,
+                color: Colors.white,
+              ),
+            ),
+            child: InkWell(
+              onTap: () {
+                // Navigate to RecipeDetailPage when tapped
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RecipeDetailPage(recipe: recipe),
                   ),
-                  title: Text(recipe['title']!),
-                  subtitle: Text(recipe['description']!),
-                )),
+                );
+              },
+              child: Card(
+                margin: EdgeInsets.all(10),
+                child: Container(
+                  width: double.infinity, // Stretch to full width
+                  height: 110, // Set desired height
+                  padding: EdgeInsets.all(10), // Add padding inside the card
+                  child: Row(
+                    children: [
+                      // Leading Image
+                      Container(
+                        width: 105, // Set image width
+                        height: 105,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            image: NetworkImage(recipe['image']!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 30), // Spacing between image and text
+                      // Title and Description
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  recipe['title']!,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Flexible(
+                                child: Text(
+                                  recipe['description']!,
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.grey[700]),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.visible,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           );
         },
       ),
@@ -72,13 +131,50 @@ class _RecipeListPageState extends State<RecipeListPage> {
               recipes.add(newRecipe);
             });
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Add a new recipe!')),
+              SnackBar(content: Text('Recipe Added!')),
             );
           }
         },
         backgroundColor: Colors.green,
         child: Icon(Icons.add),
       ),
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmation(
+      BuildContext context, Map<String, String> recipe, int index) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Delete Recipe'),
+          content:
+              Text('Are you sure you want to delete "${recipe['title']}"?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  recipes.removeAt(index);
+                });
+                Navigator.pop(context, true);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Recipe deleted successfully!')),
+                );
+              },
+              child: Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
